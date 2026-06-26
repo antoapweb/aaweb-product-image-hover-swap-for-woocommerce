@@ -1,0 +1,90 @@
+# Copyright (C) 2026 Apostolou Antonios
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: AAWEB Product Image Hover Swap for Woocommerce 1.3.6\n"
+"Report-Msgid-Bugs-To: https://antoapweb.gr\n"
+"POT-Creation-Date: 2026-06-12 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: AAWEB manual POT build\n"
+"X-Domain: aaweb-product-image-hover-swap-for-woocommerce\n"
+
+msgid "AAWEB Product Image Hover Swap for Woocommerce requires WooCommerce to be installed and active."
+msgstr ""
+
+msgid "Plugin Activation Error"
+msgstr ""
+
+msgid "AAWEB Hover Swap"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Desktop only"
+msgstr ""
+
+msgid "Wrap only product images"
+msgstr ""
+
+msgid "Object fit"
+msgstr ""
+
+msgid "Transition duration in ms"
+msgstr ""
+
+msgid "Product card selector"
+msgstr ""
+
+msgid "Product link selector"
+msgstr ""
+
+msgid "Image selector inside product link"
+msgstr ""
+
+msgid "Enable WooCommerce hook injection"
+msgstr ""
+
+msgid "Injected image size"
+msgstr ""
+
+msgid "Gallery image index"
+msgstr ""
+
+msgid "Enable AJAX DOM fallback"
+msgstr ""
+
+msgid "Enable DOM observer"
+msgstr ""
+
+msgid "AJAX timeout in ms"
+msgstr ""
+
+msgid "Enable in-page AJAX cache"
+msgstr ""
+
+msgid "AJAX concurrency"
+msgstr ""
+
+msgid "Universal second-image hover swap for WooCommerce, Elementor product grids, ShopEngine product lists, WooCommerce blocks and compatible product card loops."
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "You do not have permission to access this page."
+msgstr ""
+
+msgid "AAWEB Product Image Hover Swap for Woocommerce"
+msgstr ""
+
+msgid "Save Settings"
+msgstr ""

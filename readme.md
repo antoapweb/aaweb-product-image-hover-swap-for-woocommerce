@@ -31,6 +31,11 @@ GPLv2 or later.
 
 ## Changelog
 
+### 1.3.8 ###
+- Changed default hover image size to Medium Large.
+- Added selectable hover image sizes in plugin settings.
+- Improved hover image sharpness on WooCommerce product grids.
+
 ### 1.3.7 ###
 - Added safer fallback handling for default settings.
 - Added Reset to Defaults support.

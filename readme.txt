@@ -5,7 +5,7 @@ Requires at least: 6.7
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,11 @@ The plugin uses the selected image from the WooCommerce product gallery. By defa
 
 == Changelog ==
 
+= 1.3.8 =
+* Changed default hover image size to Medium Large.
+* Added selectable hover image sizes in plugin settings.
+* Improved hover image sharpness on WooCommerce product grids.
+
 = 1.3.7 =
 * Added safer fallback handling for default settings.
 * Added Reset to Defaults support.
@@ -107,6 +112,9 @@ The plugin uses the selected image from the WooCommerce product gallery. By defa
 * Added mobile-safe desktop-only behavior.
 
 == Upgrade Notice ==
+
+= 1.3.8 =
+Recommended update for sharper hover images and selectable hover image sizes.
 
 = 1.3.6 =
 Recommended update for mobile/touch compatibility with Desktop-only mode and cleaner AJAX fallback behavior.

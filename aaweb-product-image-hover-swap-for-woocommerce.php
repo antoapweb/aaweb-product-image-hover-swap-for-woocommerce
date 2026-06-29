@@ -3,7 +3,7 @@
  * Plugin Name: AAWEB Product Image Hover Swap for WooCommerce
  * Plugin URI: https://antoapweb.gr/aaweb-product-image-hover-swap-for-woocommerce/
  * Description: Adds a second-image hover swap effect to WooCommerce and product card loops, including Elementor, ShopEngine and block-based catalogs.
- * Version: 1.3.7
+ * Version: 1.3.8
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class AAWEB_Universal_Woo_Hover_Swap {
 
-	const VERSION      = '1.3.7';
+	const VERSION      = '1.3.8';
 	const OPTION_NAME  = 'aaweb_hover_swap_options';
 	const NONCE_ACTION = 'aaweb_hover_swap_nonce_action';
 
@@ -110,7 +110,7 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 			'selector_img'       => 'img',
 
 			'enable_hook_inject' => 1,
-			'hook_img_size'      => 'woocommerce_thumbnail',
+			'hook_img_size'      => 'medium_large',
 			'gallery_index'      => 0,
 
 			'enable_ajax_dom'    => 1,
@@ -267,7 +267,17 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 			'selector_img'       => array( __( 'Image selector inside product link', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
 
 			'enable_hook_inject' => array( __( 'Enable WooCommerce hook injection', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'hook_img_size'      => array( __( 'Injected image size', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
+			'hook_img_size'      => array(
+				__( 'Injected image size', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+				'select',
+				array(
+					'medium_large'          => __( 'Medium Large (Recommended)', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+					'woocommerce_thumbnail' => __( 'WooCommerce Thumbnail', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+					'medium'                => __( 'Medium', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+					'large'                 => __( 'Large', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+					'full'                  => __( 'Full Size', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+				),
+			),
 			'gallery_index'      => array( __( 'Gallery image index', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
 
 			'enable_ajax_dom'    => array( __( 'Enable AJAX DOM fallback', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
@@ -414,7 +424,7 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 			'selector_link'      => __( 'Advanced: custom product link selectors are added after the built-in default selectors.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			'selector_img'       => __( 'Advanced: custom image selectors are added after the built-in default selector.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			'enable_hook_inject' => __( 'Adds the second gallery image through the native WooCommerce loop hook when possible.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'hook_img_size'      => __( 'WooCommerce image size used for the injected second image. Leave empty to use woocommerce_thumbnail.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'hook_img_size'      => __( 'Choose the image size used for the hover image. Medium Large is recommended for the best balance between quality and performance.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			'gallery_index'      => __( 'Zero-based gallery image index. 0 means the first product gallery image.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			'enable_ajax_dom'    => __( 'Loads the second image through AJAX when the theme or builder does not print it in the product card.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			'dom_observer'       => __( 'Watches AJAX filters, infinite scroll and refreshed grids and applies the hover swap again.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
@@ -637,7 +647,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 		}
 
 		$second_id = absint( self::$second_image_map[ $product_id ] );
-		$size      = sanitize_key( $options['hook_img_size'] ?: 'woocommerce_thumbnail' );
+		$size      = sanitize_key( $options['hook_img_size'] ?: 'medium_large' );
 
 		echo wp_get_attachment_image(
 			$second_id,
@@ -689,7 +699,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 			wp_send_json_error( array( 'reason' => 'second_image_not_found' ), 200 );
 		}
 
-		$size = sanitize_key( $options['hook_img_size'] ?: 'woocommerce_thumbnail' );
+		$size = sanitize_key( $options['hook_img_size'] ?: 'medium_large' );
 		$url  = wp_get_attachment_image_url( absint( $gallery[ $index ] ), $size );
 
 		if ( ! $url ) {

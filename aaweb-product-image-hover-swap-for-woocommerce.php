@@ -3,7 +3,7 @@
  * Plugin Name: AAWEB Product Image Hover Swap for WooCommerce
  * Plugin URI: https://antoapweb.gr/aaweb-product-image-hover-swap-for-woocommerce/
  * Description: Adds a second-image hover swap effect to WooCommerce and product card loops, including Elementor, ShopEngine and block-based catalogs.
- * Version: 1.3.8
+ * Version: 1.3.9
  * Requires at least: 6.7
  * Requires PHP: 8.0
  * Requires Plugins: woocommerce
@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class AAWEB_Universal_Woo_Hover_Swap {
 
-	const VERSION      = '1.3.8';
+	const VERSION      = '1.3.9';
 	const OPTION_NAME  = 'aaweb_hover_swap_options';
 	const NONCE_ACTION = 'aaweb_hover_swap_nonce_action';
 
@@ -100,8 +100,6 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 	public static function defaults(): array {
 		return array(
 			'enabled'            => 1,
-			'desktop_only'       => 1,
-			'wrap_images'        => 1,
 			'object_fit'         => 'contain',
 			'transition_ms'      => 250,
 
@@ -136,8 +134,6 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 		$options  = array_merge( $defaults, $saved );
 
 		$options['enabled']            = empty( $options['enabled'] ) ? 0 : 1;
-		$options['desktop_only']       = empty( $options['desktop_only'] ) ? 0 : 1;
-		$options['wrap_images']        = empty( $options['wrap_images'] ) ? 0 : 1;
 		$options['object_fit']         = 'cover' === ( $options['object_fit'] ?? '' ) ? 'cover' : $defaults['object_fit'];
 		$options['transition_ms']      = self::positive_int_or_default( $options['transition_ms'] ?? null, $defaults['transition_ms'], 0 );
 
@@ -145,15 +141,16 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 		$options['selector_link']      = self::selector_with_defaults( (string) ( $options['selector_link'] ?? '' ), $defaults['selector_link'] );
 		$options['selector_img']       = self::selector_with_defaults( (string) ( $options['selector_img'] ?? '' ), $defaults['selector_img'] );
 
-		$options['enable_hook_inject'] = empty( $options['enable_hook_inject'] ) ? 0 : 1;
 		$options['hook_img_size']      = self::image_size_or_default( $options['hook_img_size'] ?? '', $defaults['hook_img_size'] );
 		$options['gallery_index']      = self::positive_int_or_default( $options['gallery_index'] ?? null, $defaults['gallery_index'], 0 );
 
-		$options['enable_ajax_dom']    = empty( $options['enable_ajax_dom'] ) ? 0 : 1;
-		$options['dom_observer']       = empty( $options['dom_observer'] ) ? 0 : 1;
-		$options['ajax_timeout_ms']    = self::positive_int_or_default( $options['ajax_timeout_ms'] ?? null, $defaults['ajax_timeout_ms'], 500 );
-		$options['ajax_cache']         = empty( $options['ajax_cache'] ) ? 0 : 1;
-		$options['ajax_concurrency']   = max( 1, min( 12, self::positive_int_or_default( $options['ajax_concurrency'] ?? null, $defaults['ajax_concurrency'], 1 ) ) );
+		// Internal behavior: one stable frontend flow, no user-facing legacy toggles.
+		$options['enable_hook_inject'] = 1;
+		$options['enable_ajax_dom']    = 1;
+		$options['dom_observer']       = 1;
+		$options['ajax_timeout_ms']    = $defaults['ajax_timeout_ms'];
+		$options['ajax_cache']         = 1;
+		$options['ajax_concurrency']   = $defaults['ajax_concurrency'];
 
 		return $options;
 	}
@@ -250,25 +247,22 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 
 		add_settings_section(
 			'aaweb_hover_swap_main',
-			esc_html__( 'Settings', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			esc_html__( 'General Settings', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 			array( __CLASS__, 'settings_section_intro' ),
 			'aaweb-product-image-hover-swap-for-woocommerce'
 		);
 
-		$fields = array(
-			'enabled'            => array( __( 'Enabled', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'desktop_only'       => array( __( 'Desktop only', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'wrap_images'        => array( __( 'Wrap only product images', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'object_fit'         => array( __( 'Object fit', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'select', array( 'contain' => 'contain', 'cover' => 'cover' ) ),
-			'transition_ms'      => array( __( 'Transition duration in ms', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
+		add_settings_section(
+			'aaweb_hover_swap_advanced',
+			esc_html__( 'Advanced Settings', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			array( __CLASS__, 'settings_section_advanced_intro' ),
+			'aaweb-product-image-hover-swap-for-woocommerce'
+		);
 
-			'selector_item'      => array( __( 'Product card selector', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
-			'selector_link'      => array( __( 'Product link selector', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
-			'selector_img'       => array( __( 'Image selector inside product link', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
-
-			'enable_hook_inject' => array( __( 'Enable WooCommerce hook injection', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'hook_img_size'      => array(
-				__( 'Injected image size', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+		$general_fields = array(
+			'enabled'       => array( __( 'Enabled', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
+			'hook_img_size' => array(
+				__( 'Hover image size', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 				'select',
 				array(
 					'medium_large'          => __( 'Medium Large (Recommended)', 'aaweb-product-image-hover-swap-for-woocommerce' ),
@@ -278,58 +272,61 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 					'full'                  => __( 'Full Size', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 				),
 			),
-			'gallery_index'      => array( __( 'Gallery image index', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
-
-			'enable_ajax_dom'    => array( __( 'Enable AJAX DOM fallback', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'dom_observer'       => array( __( 'Enable DOM observer', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'ajax_timeout_ms'    => array( __( 'AJAX timeout in ms', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
-			'ajax_cache'         => array( __( 'Enable in-page AJAX cache', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'checkbox' ),
-			'ajax_concurrency'   => array( __( 'AJAX concurrency', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
+			'object_fit'    => array( __( 'Object fit', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'select', array( 'contain' => 'contain', 'cover' => 'cover' ) ),
+			'transition_ms' => array( __( 'Transition duration in ms', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
 		);
 
-		foreach ( $fields as $key => $field ) {
-			add_settings_field(
-				'aaweb_hover_swap_' . $key,
-				esc_html( $field[0] ),
-				array( __CLASS__, 'render_field' ),
-				'aaweb-product-image-hover-swap-for-woocommerce',
-				'aaweb_hover_swap_main',
-				array(
-					'key'     => $key,
-					'type'    => $field[1],
-					'choices' => $field[2] ?? array(),
-				)
-			);
+		$advanced_fields = array(
+			'selector_item' => array( __( 'Product card selector', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
+			'selector_link' => array( __( 'Product link selector', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
+			'selector_img'  => array( __( 'Product image selector', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'text' ),
+			'gallery_index' => array( __( 'Gallery image index', 'aaweb-product-image-hover-swap-for-woocommerce' ), 'number' ),
+		);
+
+		foreach ( $general_fields as $key => $field ) {
+			self::add_settings_field( $key, $field, 'aaweb_hover_swap_main' );
 		}
+
+		foreach ( $advanced_fields as $key => $field ) {
+			self::add_settings_field( $key, $field, 'aaweb_hover_swap_advanced' );
+		}
+	}
+
+	private static function add_settings_field( string $key, array $field, string $section ): void {
+		add_settings_field(
+			'aaweb_hover_swap_' . $key,
+			esc_html( $field[0] ),
+			array( __CLASS__, 'render_field' ),
+			'aaweb-product-image-hover-swap-for-woocommerce',
+			$section,
+			array(
+				'key'     => $key,
+				'type'    => $field[1],
+				'choices' => $field[2] ?? array(),
+			)
+		);
 	}
 
 	public static function settings_section_intro(): void {
 		echo '<p>' . esc_html__( 'Universal second-image hover swap for WooCommerce, Elementor product grids, ShopEngine product lists, WooCommerce blocks and compatible product card loops.', 'aaweb-product-image-hover-swap-for-woocommerce' ) . '</p>';
 	}
 
+	public static function settings_section_advanced_intro(): void {
+		echo '<p>' . esc_html__( 'Use these only when a theme or builder has a custom product card structure.', 'aaweb-product-image-hover-swap-for-woocommerce' ) . '</p>';
+	}
+
 	public static function sanitize_options( $input ): array {
 		$input = is_array( $input ) ? $input : array();
 
 		$output = array(
-			'enabled'            => empty( $input['enabled'] ) ? 0 : 1,
-			'desktop_only'       => empty( $input['desktop_only'] ) ? 0 : 1,
-			'wrap_images'        => empty( $input['wrap_images'] ) ? 0 : 1,
-			'object_fit'         => isset( $input['object_fit'] ) && 'cover' === $input['object_fit'] ? 'cover' : 'contain',
-			'transition_ms'      => $input['transition_ms'] ?? '',
-
-			'selector_item'      => $input['selector_item'] ?? '',
-			'selector_link'      => $input['selector_link'] ?? '',
-			'selector_img'       => $input['selector_img'] ?? '',
-
-			'enable_hook_inject' => empty( $input['enable_hook_inject'] ) ? 0 : 1,
-			'hook_img_size'      => $input['hook_img_size'] ?? '',
-			'gallery_index'      => $input['gallery_index'] ?? '',
-
-			'enable_ajax_dom'    => empty( $input['enable_ajax_dom'] ) ? 0 : 1,
-			'dom_observer'       => empty( $input['dom_observer'] ) ? 0 : 1,
-			'ajax_timeout_ms'    => $input['ajax_timeout_ms'] ?? '',
-			'ajax_cache'         => empty( $input['ajax_cache'] ) ? 0 : 1,
-			'ajax_concurrency'   => $input['ajax_concurrency'] ?? '',
+			'enabled'       => empty( $input['enabled'] ) ? 0 : 1,
+			'object_fit'    => isset( $input['object_fit'] ) && 'cover' === $input['object_fit'] ? 'cover' : 'contain',
+			'transition_ms' => $input['transition_ms'] ?? '',
+			'hook_img_size' => $input['hook_img_size'] ?? '',
+			'selector_item' => $input['selector_item'] ?? '',
+			'selector_link' => $input['selector_link'] ?? '',
+			'selector_img'  => $input['selector_img'] ?? '',
+			'gallery_index' => $input['gallery_index'] ?? '',
 		);
 
 		return self::normalize_options( $output );
@@ -415,22 +412,14 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 
 	private static function field_help( string $key ): string {
 		$help = array(
-			'enabled'            => __( 'Turns the hover swap effect on or off.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'desktop_only'       => __( 'Limits the hover animation to devices with a real mouse hover state.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'wrap_images'        => __( 'Wraps only product images so titles, prices and badges stay above the hover image.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'object_fit'         => __( 'Controls how the second image fits inside the product thumbnail area.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'transition_ms'      => __( 'Animation duration in milliseconds. Leave empty to use the default.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'selector_item'      => __( 'Advanced: custom product card selectors are added after the built-in default selectors.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'selector_link'      => __( 'Advanced: custom product link selectors are added after the built-in default selectors.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'selector_img'       => __( 'Advanced: custom image selectors are added after the built-in default selector.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'enable_hook_inject' => __( 'Adds the second gallery image through the native WooCommerce loop hook when possible.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'hook_img_size'      => __( 'Choose the image size used for the hover image. Medium Large is recommended for the best balance between quality and performance.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'gallery_index'      => __( 'Zero-based gallery image index. 0 means the first product gallery image.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'enable_ajax_dom'    => __( 'Loads the second image through AJAX when the theme or builder does not print it in the product card.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'dom_observer'       => __( 'Watches AJAX filters, infinite scroll and refreshed grids and applies the hover swap again.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'ajax_timeout_ms'    => __( 'Maximum AJAX wait time in milliseconds. Leave empty to use the default.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'ajax_cache'         => __( 'Caches loaded second-image URLs during the current page view.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
-			'ajax_concurrency'   => __( 'Controls how many AJAX image requests may run at the same time.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'enabled'       => __( 'Turns the hover swap effect on or off.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'hook_img_size' => __( 'Choose the image size used for the hover image. Medium Large is recommended for the best balance between quality and performance.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'object_fit'    => __( 'Controls how the second image fits inside the product thumbnail area.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'transition_ms' => __( 'Animation duration in milliseconds. Leave empty to use the default.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'selector_item' => __( 'Advanced: custom product card selectors are added after the built-in default selectors.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'selector_link' => __( 'Advanced: custom product link selectors are added after the built-in default selectors.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'selector_img'  => __( 'Advanced: custom image selectors are added after the built-in default selector.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
+			'gallery_index' => __( 'Zero-based gallery image index. 0 means the first product gallery image.', 'aaweb-product-image-hover-swap-for-woocommerce' ),
 		);
 
 		return isset( $help[ $key ] ) ? (string) $help[ $key ] : '';
@@ -504,18 +493,13 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 		wp_enqueue_script( 'aaweb-product-image-hover-swap-for-woocommerce' );
 
 		$config = array(
-			'item'        => $options['selector_item'],
-			'link'        => $options['selector_link'],
-			'img'         => $options['selector_img'],
-			'wrapImages'  => ! empty( $options['wrap_images'] ),
-			'enableAjax'  => ! empty( $options['enable_ajax_dom'] ),
-			'observer'    => ! empty( $options['dom_observer'] ),
-			'desktopOnly' => ! empty( $options['desktop_only'] ),
-			'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-			'nonce'       => wp_create_nonce( self::NONCE_ACTION ),
-			'timeout'     => absint( $options['ajax_timeout_ms'] ),
-			'cache'       => ! empty( $options['ajax_cache'] ),
-			'conc'        => absint( $options['ajax_concurrency'] ),
+			'item'    => $options['selector_item'],
+			'link'    => $options['selector_link'],
+			'img'     => $options['selector_img'],
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+			'timeout' => absint( $options['ajax_timeout_ms'] ),
+			'conc'    => absint( $options['ajax_concurrency'] ),
 		);
 
 		wp_add_inline_script(
@@ -532,9 +516,12 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 		$transition   = absint( $options['transition_ms'] );
 		$item         = self::css_selector_for_output( $options['selector_item'] );
 		$link         = self::css_selector_for_output( $options['selector_link'] );
-		$desktop_only = ! empty( $options['desktop_only'] );
-
 		$base = "
+img.aaweb-hs-secondary{
+	display:none !important;
+	opacity:0;
+	pointer-events:none;
+}
 .aaweb-hs-imgwrap{
 	position:relative;
 	display:block;
@@ -543,7 +530,7 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 	overflow:hidden;
 }
 .aaweb-hs-imgwrap > img{
-	display:block;
+	display:block !important;
 	width:100%;
 	height:auto;
 	position:relative;
@@ -578,16 +565,12 @@ final class AAWEB_Universal_Woo_Hover_Swap {
 ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:1;}
 ";
 
-		if ( $desktop_only ) {
-			return $base . "
-/* Desktop only limits the hover animation, not image loading/AJAX. */
-@media (hover:hover) and (pointer:fine){
-	{$hover}
-}
-";
-		}
-
-		return $base . $hover;
+		return $base . "
+	/* Hover effects apply only on devices with a real hover-capable pointer. */
+	@media (hover:hover) and (pointer:fine){
+		{$hover}
+	}
+	";
 	}
 
 	private static function css_selector_for_output( string $selector ): string {
@@ -598,7 +581,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	public static function hook_store_second_image_id(): void {
 		$options = self::get_options();
 
-		if ( empty( $options['enabled'] ) || empty( $options['enable_hook_inject'] ) || is_admin() ) {
+		if ( empty( $options['enabled'] ) || is_admin() ) {
 			return;
 		}
 
@@ -630,7 +613,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	public static function hook_print_second_image(): void {
 		$options = self::get_options();
 
-		if ( empty( $options['enabled'] ) || empty( $options['enable_hook_inject'] ) || is_admin() ) {
+		if ( empty( $options['enabled'] ) || is_admin() ) {
 			return;
 		}
 
@@ -724,8 +707,6 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 		return;
 	}
 
-	const canHover = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-
 	const memory = new Map();
 	let queue = [];
 	let running = 0;
@@ -786,15 +767,11 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	}
 
 	function ensureImageWrapper(link) {
-		if (!CFG.wrapImages) {
-			return;
-		}
-
 		if (link.querySelector('.aaweb-hs-imgwrap')) {
 			return;
 		}
 
-		const firstImage = link.querySelector('img.wp-post-image, img.attachment-woocommerce_thumbnail, img');
+		const firstImage = link.querySelector(CFG.img || 'img.wp-post-image, img.attachment-woocommerce_thumbnail, img');
 
 		if (!firstImage) {
 			return;
@@ -822,10 +799,6 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	}
 
 	function scanWrap(root) {
-		if (!CFG.wrapImages) {
-			return;
-		}
-
 		qsa(root, CFG.item).forEach(function(card){
 			const link = card.querySelector(CFG.link);
 			if (!link) {
@@ -870,7 +843,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	}
 
 	function enqueue(productId, link) {
-		if (CFG.cache && memory.has(productId)) {
+		if (memory.has(productId)) {
 			injectSecondImage(link, memory.get(productId));
 			return;
 		}
@@ -893,10 +866,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 			fetchSecondImage(job.productId)
 				.then(function(url){
 					if (url) {
-						if (CFG.cache) {
-							memory.set(job.productId, url);
-						}
-
+						memory.set(job.productId, url);
 						injectSecondImage(job.link, url);
 					}
 				})
@@ -933,10 +903,6 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	}
 
 	function scanAjax(root) {
-		if (!CFG.enableAjax) {
-			return;
-		}
-
 		qsa(root, CFG.item).forEach(function(card){
 			if (card.dataset.aawebHsAjaxDone === '1') {
 				return;
@@ -980,7 +946,7 @@ ul.products li.product:hover .aaweb-hs-imgwrap > img.aaweb-hs-secondary{opacity:
 	function boot() {
 		scanAll(document);
 
-		if (CFG.observer && window.MutationObserver) {
+		if (window.MutationObserver) {
 			const observer = new MutationObserver(function(mutations){
 				mutations.forEach(function(mutation){
 					if (!mutation.addedNodes) {

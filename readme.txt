@@ -5,7 +5,7 @@ Requires at least: 6.7
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,7 +60,7 @@ Yes. The DOM observer can detect refreshed product grids and apply the hover beh
 
 = Does it affect mobile layouts? =
 
-The default desktop-only mode prevents hover logic on touch devices and avoids duplicate second images on mobile.
+Hover effects are automatically limited to devices with a real hover-capable pointer, so touch devices avoid unwanted hover behavior.
 
 = Where does the second image come from? =
 
@@ -73,6 +73,13 @@ The plugin uses the selected image from the WooCommerce product gallery. By defa
 3. Example product catalog/grid compatibility screen.
 
 == Changelog ==
+
+= 1.3.9 =
+* Simplified settings screen with General and Advanced sections.
+* Removed legacy Wrap only image and Desktop only options from the admin UI.
+* Internalized technical AJAX, hook, observer, cache, timeout and concurrency behavior.
+* Fixed brief raw display of the secondary image before JavaScript initialization.
+* Cleaned frontend initialization to use one stable image-wrapper flow.
 
 = 1.3.8 =
 * Changed default hover image size to Medium Large.
@@ -117,7 +124,7 @@ The plugin uses the selected image from the WooCommerce product gallery. By defa
 Recommended update for sharper hover images and selectable hover image sizes.
 
 = 1.3.6 =
-Recommended update for mobile/touch compatibility with Desktop-only mode and cleaner AJAX fallback behavior.
+Recommended update with a simpler settings screen and a cleaner, more stable image-wrapper flow.
 
 = 1.3.4 =
 Recommended update for ShopEngine product list compatibility.
